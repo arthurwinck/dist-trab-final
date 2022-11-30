@@ -6,9 +6,9 @@ bd2_db_string = "postgresql://postgres:bd1-distribuida@localhost:5434/bd2-distri
 
 def send_message(op, type, cnpj, id, value, success):
     if success:
-        return "Operacao: add Type: {type} Cnpj: {cnpj} Id: {id} value: {value}".format(type = type, cnpj = cnpj, id = id, value = value)
+        return f"Operacao: {op} Type: {type} Cnpj: {cnpj} Id: {id} value: {value}".format(type = type, cnpj = cnpj, id = id, value = value)
     else:
-        return "Operacao Falhou: add Type: {type} Cnpj: {cnpj} Id: {id}".format(type = type, cnpj = cnpj, id = id)
+        return f"Operacao Falhou: {op} Type: {type} Cnpj: {cnpj} Id: {id}".format(type = type, cnpj = cnpj, id = id)
 
 class Banco():
 
@@ -54,23 +54,20 @@ class Banco():
             return 1
         cur.close()
 
-    def get_query(type, id):
-        return f"""select * from public.{type} where id = {id}
-        """
+    def get_query(con, type, column, value):
+        if isinstance(value, str):
+            sql = f"""select * from public.{type} where {column} = '{value}'
+            """
+        else:
+            sql = f"""select * from public.{type} where {column} = {value}
+            """
 
-    def get_produto(con, id):
-        sql = Banco.get_query('produtos', id)
         cur = con.cursor()
         cur.execute(sql)
-        result = cur.fetchall()
-        cur.close()
-        return result
-
-    def get_cliente(con, id):
-        sql = Banco.get_query('clientes', id)
-        cur = con.cursor()
-        cur.execute(sql)
-        result = cur.fetchall()
+        recset = cur.fetchall()
+        result = []
+        for rec in recset:
+            result.append(rec)
         cur.close()
         return result
 
@@ -87,14 +84,9 @@ def add(type, cnpj, id, value):
         return send_message(type, cnpj, id, value, 0)
     
 def read(type, cnpj, id):
-    if type == 'produto':
-        value = Banco.get_produto(con_produtos, id)
-    elif type == 'cliente':
-        value = Banco.get_cliente(con_clientes, id)
-    else:
-        return send_message(type, cnpj, id, value, 0)
+    value = Banco.get_query(con_produtos, type, 'cnpj', cnpj)
 
-    if value != None:
+    if len(value) > 0:
         return send_message(type, cnpj, id, value, 1)
     else:
         return send_message(type, cnpj, id, value, 0)
