@@ -32,7 +32,8 @@ gcc client.c -o client -lczmq
 
 #### Rodando clientes e servidor:
 
-```./client
+```
+./client
 ```
 
 ```
