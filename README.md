@@ -3,13 +3,16 @@ Trabalho final de computação distribuída
 
 ### Rodando a aplicação:
 
-#### Instalar módulos do ZeroMQ
+#### Instalar módulos
+
+Docker:
+[Como instalar docker no linux](https://www.youtube.com/watch?v=H0RS7bVymw0)
 
 C:
 `sudo apt-get install libczmq-dev`
 
 Python:
-`pip install pyzmq`
+`pip install -r requirements.txt`
 
 #### Compilando arquivos em C:
 
