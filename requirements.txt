@@ -1,0 +1,6 @@
+python3-dev
+libpq-dev
+psycopg2
+SQLAlchemy==1.4.44
+pyzmq
+
