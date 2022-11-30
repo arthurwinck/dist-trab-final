@@ -18,6 +18,10 @@ Python:
 
 `gcc client.c -o client -lczmq`
 
+#### Executando Script para Criar Bancos de dados:
+
+`./initdb.sh`
+
 #### Rodando clientes e servidor:
 
 `./client`
