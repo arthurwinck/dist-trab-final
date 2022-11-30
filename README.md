@@ -9,26 +9,39 @@ Docker:
 [Como instalar docker no linux](https://www.youtube.com/watch?v=H0RS7bVymw0)
 
 C:
-`sudo apt-get install libczmq-dev`
+```
+sudo apt-get install libczmq-dev
+```
 
 Python:
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 #### Compilando arquivos em C:
 
-`gcc client.c -o client -lczmq`
+```
+gcc client.c -o client -lczmq
+```
 
 #### Executando Script para Criar Bancos de dados:
 
-`./initdb.sh`
+```
+./initdb.sh
+```
 
 #### Rodando clientes e servidor:
 
-`./client`
+```./client
+```
 
-`python server.py`
+```
+python server.py
+```
 
-`python client.py`
+```
+python client.py
+```
 
 # Especificação
 
@@ -37,20 +50,28 @@ Python:
 ### Banco de Dados I - produtos (controle de estoque)
 
 Sintaxe de chamada para servidor: 
-`add:read:remove/produto/cnpj/id/quantidade*(add, remove)`
+```
+add:read:remove/produto/cnpj/id/quantidade*(add, remove)
+```
 
 ### Banco de Dados II - clientes (quantidade de clientes)
 
 Sintaxe de chamada para servidor:
-`add:read:delete/cliente/cnpj/quantidade*(add, remove)`
+```
+add:read:delete/cliente/cnpj/quantidade*(add, remove)
+```
 
 Operação:
 
 1. Pedir operação para usuário e mandar ela para o servidor:
 
-`add:read:remove/produto/cnpj/id/quantidade*(add, remove)`
+```
+add:read:remove/produto/cnpj/id/quantidade*(add, remove)
+```
 ou
-`add:read:delete/cliente/cnpj/quantidade*(add, remove)`
+```
+add:read:delete/cliente/cnpj/quantidade*(add, remove)
+```
 
 2. Servidor parseia a string e executa chamada de alguma função do RPC (add, read, remove) como parâmetro cliente ou produto  e devolve resultado da operação 
 
