@@ -1,83 +1,141 @@
 from xmlrpc.server import SimpleXMLRPCServer
-from sqlalchemy import create_engine
-from sqlalchemy import Table, Column, String, MetaData, Integer, Sequence
-from sqlalchemy.ext.declarative import declarative_base  
-from sqlalchemy.orm import sessionmaker
+import psycopg2
 
 bd1_db_string = "postgresql://postgres:bd1-distribuida@localhost:5433/bd1-distribuida"
 bd2_db_string = "postgresql://postgres:bd1-distribuida@localhost:5434/bd2-distribuida"
 
-db_produtos = create_engine(bd1_db_string)
-db_clientes = create_engine(bd2_db_string)
+def send_message(op, type, cnpj, id, value, success):
+    if success:
+        return "Operacao: add Type: {type} Cnpj: {cnpj} Id: {id} value: {value}".format(type = type, cnpj = cnpj, id = id, value = value)
+    else:
+        return "Operacao Falhou: add Type: {type} Cnpj: {cnpj} Id: {id}".format(type = type, cnpj = cnpj, id = id)
 
-baseProdutos = declarative_base()
-baseClientes = declarative_base()
+class Banco():
 
+    def conecta_db(host, database, user, password, port):
+        con = psycopg2.connect(host=host,
+                                port=port, 
+                                database=database,
+                                user=user, 
+                                password=password
+                                )
+        return con
 
-class Produtos(baseProdutos):
-    __tablename__ = 'produtos'
-    id = Column('id', Integer, Sequence("id_produtos", start=1), primary_key=True),
-    cnpj = Column('cnpj', String(length=14)),
-    nome = Column('nome', String(collation='utf-8', length=100)),
-    quantidade = Column('quantidade', Integer)
-    
+    def execute(con, sql):
+        #con = Banco.conecta_db(host, database, user, password)
+        cur = con.cursor()
+        cur.execute(sql)
+        con.commit()
+        cur.close()
 
-class Clientes(baseClientes):
-    id = Column('id', Integer, Sequence("id_clientes", start=1), primary_key=True),
-    cnpj = Column('cnpj', String(length=14)),
-    quantidade = Column('quantidade', Integer)
-    
-baseClientes.metadata.create_all(db_clientes)
-baseProdutos.metadata.create_all(db_produtos)
+    def inserir_cliente(con, cnpj, qtd):
+        sql = f"""
+                INSERT INTO public.clientes (cnpj, qtd) values ('{cnpj}', {qtd});
+        """
+        Banco.inserir_db(con, sql)
 
-
-SessionProduto = sessionmaker(db_produtos)
-produtos_session = SessionProduto()
-
-SessionClientes = sessionmaker(db_clientes)
-clientes_session = SessionClientes()
-
-
-def create_tables(db_produtos, db_clientes):
-    
-
-    # meta = MetaData(db_produtos)
-    # tabela_produtos = Table('produtos', meta,
-    #     Column('id', Integer, Sequence("id_produtos", start=1), primary_key=True),
-    #     Column('cnpj', String(length=14)),
-    #     Column('nome', String(collation='utf-8', length=100)),
-    #     Column('quantidade', Integer)
-    # )
-
-    produtos_session.add(tabela_produtos)
-    produtos_session.commit()
+    def inserir_produto(con, nome, cnpj, qtd):
+        sql = f"""
+                INSERT INTO public.produtos (nome, cnpj, qtd) values ('{nome}', '{cnpj}', {qtd});
+        """
+        Banco.inserir_db(con, sql)
 
 
+    def inserir_db(con, sql):
+        #con = Banco.conecta_db()
+        cur = con.cursor()
+        try:
+            cur.execute(sql)
+            con.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print("Error: %s" % error)
+            con.rollback()
+            cur.close()
+            return 1
+        cur.close()
 
-    # tabela_clientes = Table('clientes', meta,
-    #     Column('id', Integer, Sequence("id_clientes", start=1), primary_key=True),
-    #     Column('cnpj', String(length=14)),
-    #     Column('quantidade', Integer)
-    # )
+    def get_query(type, id):
+        return f"""select * from public.{type} where id = {id}
+        """
 
-    clientes_session.add(tabela_clientes)
-    clientes_session.commit()
+    def get_produto(con, id):
+        sql = Banco.get_query('produtos', id)
+        cur = con.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+        cur.close()
+        return result
+
+    def get_cliente(con, id):
+        sql = Banco.get_query('clientes', id)
+        cur = con.cursor()
+        cur.execute(sql)
+        result = cur.fetchall()
+        cur.close()
+        return result
 
 
 def add(type, cnpj, id, value):
-    return "Operacao: add Type: {type} Cnpj: {cnpj} Id: {id} value: {value}".format(type = type, cnpj = cnpj, id = id, value = value)
-
+    if type == 'produto':
+        Banco.inserir_produto(con_produtos, "pasta de dente", "234578", 5)
+        return send_message(type, cnpj, id, value, 1)
+    
+    elif type == 'cliente':    
+        Banco.inserir_cliente(con_clientes, "234578", 16)
+        return send_message(type, cnpj, id, value, 1)
+    else:
+        return send_message(type, cnpj, id, value, 0)
+    
 def read(type, cnpj, id):
-    return "Operacao: read Type: {type} Cnpj: {cnpj} Id: {id}".format(type = type, cnpj = cnpj, id = id)
+    if type == 'produto':
+        value = Banco.get_produto(con_produtos, id)
+    elif type == 'cliente':
+        value = Banco.get_cliente(con_clientes, id)
+    else:
+        return send_message(type, cnpj, id, value, 0)
 
-def remove(type, cnpj, id, value):
-    return "Operacao: remove Type: {type} Cnpj: {cnpj} Id: {id} value: {value}".format(type = type, cnpj = cnpj, id = id, value = value)
+    if value != None:
+        return send_message(type, cnpj, id, value, 1)
+    else:
+        return send_message(type, cnpj, id, value, 0)
 
 
-#create_tables(db_produtos, db_clientes)
+def remove(type, cnpj, id):
+    send_message(type, cnpj, id, value, 1)
 
-# server = SimpleXMLRPCServer(("localhost", 8888))
-# server.register_function(add, "add")
-# server.register_function(read, "read")
-# server.register_function(remove, "remove")
-# server.serve_forever()
+
+con_produtos = Banco.conecta_db('localhost', 'bd1-distribuida', 'postgres', 'bd1-distribuida', 5433)
+con_clientes = Banco.conecta_db('localhost', 'bd2-distribuida', 'postgres', 'bd2-distribuida', 5434)
+
+criar_tab_produtos = """
+    CREATE TABLE public.produtos
+    (
+        id integer PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY,
+        cnpj character varying(20),
+        nome character varying(100),
+        qtd int NOT NULL
+    );
+"""
+criar_tab_clientes = """
+    CREATE TABLE public.clientes
+    (
+        id integer PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY,
+        cnpj character varying(20),
+        qtd int NOT NULL
+    );
+
+"""
+
+Banco.execute(con_produtos, criar_tab_produtos)
+Banco.execute(con_clientes, criar_tab_clientes)
+Banco.inserir_produto(con_produtos, "pneu", "234578", 1)
+Banco.inserir_cliente(con_clientes, "234578", 16)
+
+print(Banco.get_produto(con_produtos, 1))
+print(Banco.get_cliente(con_clientes, 1))
+
+server = SimpleXMLRPCServer(("localhost", 8888))
+server.register_function(add, "add")
+server.register_function(read, "read")
+server.register_function(remove, "remove")
+server.serve_forever()
