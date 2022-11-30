@@ -29,12 +29,18 @@ class Banco():
         cur.close()
 
     def inserir_cliente(con, cnpj, qtd):
+        # TODO
+        # Primeiro dar get no cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do cliente que já existe
+        # Se não, criar um novo cliente com essa quantidade
         sql = f"""
                 INSERT INTO public.clientes (cnpj, qtd) values ('{cnpj}', {qtd});
         """
         Banco.inserir_db(con, sql)
 
     def inserir_produto(con, nome, cnpj, qtd):
+        # TODO
+        # Primeiro dar get no nome e cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do produto que já existe
+        # Se não, criar um novo produto com essa quantidade
         sql = f"""
                 INSERT INTO public.produtos (nome, cnpj, qtd) values ('{nome}', '{cnpj}', {qtd});
         """
