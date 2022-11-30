@@ -50,9 +50,9 @@ def sendRemoveOperation(values, type):
 
 def sendReadOperation(values, type):
     if type == "cliente":
-        socket.send_string(serverRPC.remove(type, values[2], 0))
+        socket.send_string(serverRPC.read(type, values[2], 0))
     else:
-        socket.send_string(serverRPC.remove(type, values[2], values[3]))
+        socket.send_string(serverRPC.read(type, values[2], values[3]))
 
 def parseMessage(message):
     values = message.decode().split(",")
