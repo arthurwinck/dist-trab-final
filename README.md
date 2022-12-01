@@ -1,6 +1,8 @@
 # dist-trab-final
 Trabalho final de computação distribuída
 
+[Docs](https://docs.google.com/document/d/1H9ZSVtCMsItGjju_DfFmOGbLV7aRe7U4eROkdcA89wU/edit)
+
 ### Rodando a aplicação:
 
 #### Instalar módulos
