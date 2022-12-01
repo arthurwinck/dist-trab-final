@@ -120,13 +120,13 @@ class Banco():
         return result
 
 
-def add(type, cnpj, id, value):
+def add(type, cnpj, nome, qtd):
     if type == 'produto':
-        Banco.inserir_produto(con_produtos, "pasta de dente", "234578", 5)
+        Banco.inserir_produto(con_produtos, nome, cnpj, qtd)
         return 'Produtos adicionados'
 
     else:    
-        Banco.inserir_cliente(con_clientes, "234578", 16)
+        Banco.inserir_cliente(con_clientes, cnpj, qtd)
         return 'Clientes adicionados'
     
 def read(type, cnpj, nome = None):
