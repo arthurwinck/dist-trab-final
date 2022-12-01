@@ -32,10 +32,12 @@ class Banco():
         # TODO
         # Primeiro dar get no cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do cliente que já existe
         # Se não, criar um novo cliente com essa quantidade
-        hasClient = Banco.get_query(con, "cliente", cnpj, qtd)
-        if len(hasClient) > 0:
-            quantidade = hasClient[1] + qtd
-            sql = f"""update public.clientes set qtd = {quantidade} where id = {hasClient[0]}
+        listClient = Banco.get_query(con, "cliente", cnpj, qtd)
+        if len(listClient) > 0:
+            # Tratamento caso exista mais de um cliente com mesmo cnpj, nome (talvez criar unique constraint no banco)
+            cliente = listClient[0]
+            quantidade = cliente[1] + qtd
+            sql = f"""update public.clientes set qtd = {quantidade} where id = {cliente[0]}
             """
         else:
             sql = f"""
@@ -48,14 +50,17 @@ class Banco():
         # TODO
         # Primeiro dar get no nome e cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do produto que já existe
         # Se não, criar um novo produto com essa quantidade
-        hasProduct = Banco.get_query(con, "produto", cnpj, qtd)
-        if len(hasProduct) > 0:
-            quantidade = hasProduct[1] + qtd
-            sql = f"""update public.produtos set qtd = {quantidade} where id = {hasProduct[0]}
+        listProduct = Banco.get_query(con, "produto", cnpj, nome)
+        print(f"listProduct: {listProduct}")
+        if len(listProduct) > 0:
+            # Tratamento caso exista mais de um cliente com mesmo cnpj, nome (talvez criar unique constraint no banco)
+            product = listProduct[0]
+            quantidade = product[1] + qtd
+            sql = f"""update public.produtos set qtd = {quantidade} where id = {product[0]}
             """
         else:
             sql = f"""
-                INSERT INTO public.produto (cnpj, qtd, nome) values ('{cnpj}', {qtd}, '{nome}');
+                INSERT INTO public.produtos (cnpj, qtd, nome) values ('{cnpj}', {qtd}, '{nome}');
             """
 
         Banco.inserir_db(con, sql)
@@ -78,7 +83,7 @@ class Banco():
             sql = f"""select id, qtd from public.produtos where cnpj = '{cnpj}' and nome = '{nome}'
             """
         else:
-            sql = f"""select id, qtd from public.produtos where cnpj = '{cnpj}'
+            sql = f"""select id, qtd from public.clientes where cnpj = '{cnpj}'
             """
 
         cur = con.cursor()
@@ -137,16 +142,28 @@ criar_tab_clientes = """
 
 """
 
-Banco.execute(con_produtos, criar_tab_produtos)
-Banco.execute(con_clientes, criar_tab_clientes)
-Banco.inserir_produto(con_produtos, "pneu", "234578", 1)
-Banco.inserir_cliente(con_clientes, "234578", 16)
+# Banco.execute(con_produtos, criar_tab_produtos)
+# Banco.execute(con_clientes, criar_tab_clientes)
+# Banco.inserir_produto(con_produtos, "pneu", "234578", 1)
+# Banco.inserir_cliente(con_clientes, "234578", 100)
+# print(Banco.get_query(con_produtos, "produto", "234578", "pneu"))
+# print(Banco.get_query(con_clientes, "cliente", "234578"))
+# print(Banco.inserir_cliente(con_clientes, "234578", 15))
+# print(Banco.get_query(con_clientes, "cliente", "234578"))
 
-print(Banco.get_produto(con_produtos, 1))
-print(Banco.get_cliente(con_clientes, 1))
+print(Banco.get_query(con_produtos, "produto", "234578", "pneu"))
+print(Banco.inserir_produto(con_produtos, "pneu", "234578", 15))
+print(Banco.get_query(con_produtos, "produto", "234578", "pneu"))
 
-server = SimpleXMLRPCServer(("localhost", 8888))
-server.register_function(add, "add")
-server.register_function(read, "read")
-server.register_function(remove, "remove")
-server.serve_forever()
+
+#print(Banco.inserir_cliente(con_clientes, "234578", 15))
+
+
+# print(Banco.get_produto(con_produtos, 1))
+# print(Banco.get_cliente(con_clientes, 1))
+
+# server = SimpleXMLRPCServer(("localhost", 8888))
+# server.register_function(add, "add")
+# server.register_function(read, "read")
+# server.register_function(remove, "remove")
+# server.serve_forever()
