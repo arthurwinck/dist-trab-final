@@ -29,9 +29,6 @@ class Banco():
         cur.close()
 
     def inserir_cliente(con, cnpj, qtd):
-        # TODO
-        # Primeiro dar get no cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do cliente que já existe
-        # Se não, criar um novo cliente com essa quantidade
         listClient = Banco.get_query(con, "cliente", cnpj, qtd)
         if len(listClient) > 0:
             # Tratamento caso exista mais de um cliente com mesmo cnpj, nome (talvez criar unique constraint no banco)
@@ -47,11 +44,7 @@ class Banco():
         Banco.inserir_db(con, sql)
 
     def inserir_produto(con, nome, cnpj, qtd):
-        # TODO
-        # Primeiro dar get no nome e cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do produto que já existe
-        # Se não, criar um novo produto com essa quantidade
         listProduct = Banco.get_query(con, "produto", cnpj, nome)
-        print(f"listProduct: {listProduct}")
         if len(listProduct) > 0:
             # Tratamento caso exista mais de um cliente com mesmo cnpj, nome (talvez criar unique constraint no banco)
             product = listProduct[0]
@@ -64,6 +57,37 @@ class Banco():
             """
 
         Banco.inserir_db(con, sql)
+
+    def remover_produto(con, nome, cnpj, qtd):
+        listProduct = Banco.get_query(con, "produto", cnpj, nome)
+        if len(listProduct) > 0:
+            product = listProduct[0]
+            if qtd >= product[1]:
+                quantidade = 0
+            else:
+                quantidade = product[1] - qtd
+            sql = f"""update public.produtos set qtd = {quantidade} where id = {product[0]}
+            """
+            Banco.inserir_db(con, sql)
+            return 1
+
+        return 0
+
+    def remover_cliente(con, cnpj, qtd):
+        listClient = Banco.get_query(con, "cliente", cnpj, qtd)
+        if len(listClient) > 0:
+            cliente = listClient[0]
+            if qtd >= cliente[1]:
+                quantidade = 0
+            else:
+                quantidade = cliente[1] - qtd
+
+            sql = f"""update public.clientes set qtd = {quantidade} where id = {cliente[0]}
+            """
+            Banco.inserir_db(con, sql)
+            return 1
+
+        return 0
 
     def inserir_db(con, sql):
         #con = Banco.conecta_db()
@@ -99,25 +123,28 @@ class Banco():
 def add(type, cnpj, id, value):
     if type == 'produto':
         Banco.inserir_produto(con_produtos, "pasta de dente", "234578", 5)
-        return send_message(type, cnpj, id, value, 1)
-    
-    elif type == 'cliente':    
+        return 'Produtos adicionados'
+
+    else:    
         Banco.inserir_cliente(con_clientes, "234578", 16)
-        return send_message(type, cnpj, id, value, 1)
-    else:
-        return send_message(type, cnpj, id, value, 0)
+        return 'Clientes adicionados'
     
-def read(type, cnpj, id):
-    value = Banco.get_query(con_produtos, type, 'cnpj', cnpj)
+def read(type, cnpj, nome = None):
+    connection = type == "produto" and con_produtos or con_clientes
+    value = Banco.get_query(connection, type, cnpj, nome)
 
-    if len(value) > 0:
-        return send_message(type, cnpj, id, value, 1)
+    return len(value) > 0 and value[0][1] or 0
+
+def remove(type, cnpj, nome, qtd):
+    if type == 'produto':
+        result = Banco.remover_produto(con_produtos, nome, cnpj, qtd)
     else:
-        return send_message(type, cnpj, id, value, 0)
+        result = Banco.remover_cliente(con_clientes, cnpj, qtd)
 
+    if result == 1:
+        return f'{type} removido'
 
-def remove(type, cnpj, id):
-    send_message(type, cnpj, id, value, 1)
+    return f'sem {type} para remover'
 
 
 con_produtos = Banco.conecta_db('localhost', 'bd1-distribuida', 'postgres', 'bd1-distribuida', 5433)
