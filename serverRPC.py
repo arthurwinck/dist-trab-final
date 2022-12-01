@@ -32,20 +32,33 @@ class Banco():
         # TODO
         # Primeiro dar get no cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do cliente que já existe
         # Se não, criar um novo cliente com essa quantidade
-        sql = f"""
+        hasClient = Banco.get_query(con, "cliente", cnpj, qtd)
+        if len(hasClient) > 0:
+            quantidade = hasClient[1] + qtd
+            sql = f"""update public.clientes set qtd = {quantidade} where id = {hasClient[0]}
+            """
+        else:
+            sql = f"""
                 INSERT INTO public.clientes (cnpj, qtd) values ('{cnpj}', {qtd});
-        """
+            """
+
         Banco.inserir_db(con, sql)
 
     def inserir_produto(con, nome, cnpj, qtd):
         # TODO
         # Primeiro dar get no nome e cnpj e id para ver se existe. Se existe, pegar o id e adicionar à quantidade do produto que já existe
         # Se não, criar um novo produto com essa quantidade
-        sql = f"""
-                INSERT INTO public.produtos (nome, cnpj, qtd) values ('{nome}', '{cnpj}', {qtd});
-        """
-        Banco.inserir_db(con, sql)
+        hasProduct = Banco.get_query(con, "produto", cnpj, qtd)
+        if len(hasProduct) > 0:
+            quantidade = hasProduct[1] + qtd
+            sql = f"""update public.produtos set qtd = {quantidade} where id = {hasProduct[0]}
+            """
+        else:
+            sql = f"""
+                INSERT INTO public.produto (cnpj, qtd, nome) values ('{cnpj}', {qtd}, '{nome}');
+            """
 
+        Banco.inserir_db(con, sql)
 
     def inserir_db(con, sql):
         #con = Banco.conecta_db()
@@ -60,12 +73,12 @@ class Banco():
             return 1
         cur.close()
 
-    def get_query(con, type, column, value):
-        if isinstance(value, str):
-            sql = f"""select * from public.{type} where {column} = '{value}'
+    def get_query(con, type, cnpj, nome = None):
+        if type == "produto":
+            sql = f"""select id, qtd from public.produtos where cnpj = '{cnpj}' and nome = '{nome}'
             """
         else:
-            sql = f"""select * from public.{type} where {column} = {value}
+            sql = f"""select id, qtd from public.produtos where cnpj = '{cnpj}'
             """
 
         cur = con.cursor()
