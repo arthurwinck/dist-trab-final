@@ -56,7 +56,7 @@ def sendReadOperation(values, type):
 
 def parseMessage(message):
     values = message.decode().split(",")
-    if len(values) < 4:
+    if len(values) < 3:
         sendErrorMessage(0)
         return
 
